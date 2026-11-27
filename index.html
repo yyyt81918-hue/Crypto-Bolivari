@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolívar Crypto Broker - Panel de Cliente</title>
+    <style>
+        :root {
+            --primary: #0056b3; /* Trustworthy Blue */
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --dark: #1e293b;
+            --light: #f8f9fa;
+        }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background-color: #f0f2f5; color: #333; }
+        
+        /* Header */
+        .header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .logo { font-weight: bold; font-size: 1.2rem; color: var(--primary); }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .status-badge { background: #e3f2fd; color: var(--primary); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+
+        /* Layout */
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: 250px 1fr; gap: 20px; }
+        
+        /* Sidebar */
+        .sidebar { background: white; padding: 20px; border-radius: 8px; height: fit-content; }
+        .menu-item { display: block; padding: 10px; color: #555; text-decoration: none; border-radius: 4px; margin-bottom: 5px; }
+        .menu-item:hover, .menu-item.active { background: var(--light); color: var(--primary); font-weight: 500; }
+
+        /* Main Content */
+        .main-content { display: flex; flex-direction: column; gap: 20px; }
+        
+        /* Cards */
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .balance-card { background: linear-gradient(135deg, var(--primary), #004494); color: white; }
+        .balance-label { font-size: 0.9rem; opacity: 0.9; }
+        .balance-amount { font-size: 2rem; font-weight: bold; margin: 10px 0; }
+        .locked-funds { font-size: 0.9rem; color: var(--warning); margin-top: 5px; }
+
+        /* Action Buttons */
+        .actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; width: 100%; margin-bottom: 5px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: transparent; border: 1px solid white; color: white; }
+        .btn-withdraw { background: var(--success); color: white; }
+        
+        /* Alert Box (The Scam Trigger) */
+        .alert-box { border-left: 4px solid var(--warning); background: #fff8e1; padding: 15px; display: none; }
+        .alert-title { font-weight: bold; color: #856404; margin-bottom: 5px; }
+
+        /* Transaction Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { color: #666; font-weight: 600; }
+        .status-completed { color: var(--success); }
+        .status-pending { color: var(--warning); }
+        .status-locked { color: var(--danger); font-weight: bold; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; text-align: center; }
+        .input-group { margin: 15px 0; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        .input-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;}
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">Bolívar<span style="color:#333">Exchange</span></div>
+        <div class="user-info">
+            <span class="status-badge">Verificado KYC</span>
+            <strong>Carlos M.</strong>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="#" class="menu-item active">Resumen</a>
+            <a href="#" class="menu-item">Mercados</a>
+            <a href="#" class="menu-item">Billetera</a>
+            <a href="#" class="menu-item">Historial</a>
+            <a href="#" class="menu-item">Soporte</a>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div class="main-content">
+            
+            <!-- Balance Card -->
+            <div class="card balance-card">
+                <div class="balance-label">Balance Total Estimado</div>
+                <div class="balance-amount" id="totalBalance">$12,450.00 USD</div>
+                <div class="locked-funds">Fondos Bloqueados: $2,500.00 (Retiro pendiente)</div>
+                
+                <div class="actions">
+                    <button class="btn btn-outline" onclick="alert('Redirigiendo a Pago Móvil...')">Depositar</button>
+                    <button class="btn btn-withdraw" onclick="openWithdrawModal()">Retirar Fondos</button>
+                </div>
+            </div>
+
+            <!-- THE SCAM ALERT (Hidden by default, shown on click) -->
+            <div class="card alert-box" id="scamAlert">
+                <div class="alert-title">⚠️ Verificación de Liquidez Requerida</div>
+                <p style="margin:0; font-size:0.9rem;">Para procesar su retiro de <strong>$12,450.00</strong>, necesitamos confirmar la fuente de los fondos debido al alta actividad en el sistema.</p>
+                <p style="margin-top:10px; font-size:0.9rem;">Su cuenta está lista para liberación inmediata si completa una <strong>Tasa de Verificación VIP</strong> de solo <strong>$50.00</strong>.</p>
+                <button class="btn btn-primary" style="margin-top:10px;" onclick="closeAlert()">Pagar y Liberar ($50)</button>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <h3>Actividad Reciente</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>26 Nov 2026</td>
+                            <td>Inversión BTC (High Yield)</td>
+                            <td style="color:green">+$4,200.00</td>
+                            <td class="status-completed">Completado</td>
+                        </tr>
+                        <tr>
+                            <td>25 Nov 2026</td>
+                            <td>Depósito Zelle</td>
+                            <td>+$8,250.00</td>
+                            <td class="status-completed">Completado</td>
+                        </tr>
+                        <tr>
+                            <td>20 Nov 2026</td>
+                            <td>Retiro (Procesando)</td>
+                            <td>-$1,500.00</td>
+                            <td class="status-locked">Bloqueado</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdrawal Modal -->
+    <div class="modal" id="withdrawModal">
+        <div class="modal-content">
+            <h3>Retirar a Billetera Externa</h3>
+            <p style="font-size:0.85rem; color:#666;">Ingrese la dirección USDT (TRC20)</p>
+            <div class="input-group">
+                <label>Dirección Destino</label>
+                <input type="text" placeholder="T9yQ... (Tron Network)">
+            </div>
+            <div class="input-group">
+                <label>Cantidad (USD)</label>
+                <input type="number" value="12450.00" readonly style="background:#f0f0f0;">
+            </div>
+            <button class="btn btn-primary" onclick="processWithdraw()">Confirmar Retiro</button>
+            <button class="btn" style="margin-top:10px; color:#666;" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        // Logic to simulate the "Scam Flow"
+        function openWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('withdrawModal').style.display = 'none';
+        }
+
+        function processWithdraw() {
+            closeModal();
+            // Hide modal, show the "Alert" immediately after they try to take money
+            document.getElementById('scamAlert').style.display = 'block';
+            // Scroll to alert
+            document.getElementById('scamAlert').scrollIntoView({behavior: "smooth"});
+        }
+
+        function closeAlert() {
+            alert("Redirigiendo a pasarela de pago móvil...");
+            // Here you would redirect to your personal wallet or payment link
+        }
+    </script>
+</body>
+</html>
